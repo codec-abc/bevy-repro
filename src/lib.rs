@@ -91,6 +91,10 @@ extern "C" {
     fn log_many(a: &str, b: &str);
 }
 
+fn my_runner(mut app: App) {
+    app.update();
+}
+
 #[wasm_bindgen(start)]
 pub fn start() {
 
@@ -111,7 +115,8 @@ pub fn start() {
         .add_plugins(DefaultPlugins)
         .add_plugin(bevy_webgl2::WebGL2Plugin)
         .add_system(keyboard_input_system.system())
-        .add_startup_system(setup.system());
+        .add_startup_system(setup.system())
+        .set_runner(my_runner);
 
     app.run();
 }
