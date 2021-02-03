@@ -1,8 +1,3 @@
-use std::{borrow::BorrowMut, ops::DerefMut, sync::{Arc, Mutex}};
-
-use std::sync::mpsc::{Sender, Receiver};
-use std::sync::mpsc;
-
 use bevy::{prelude::*};
 use bevy::{
     input::{keyboard::KeyCode, Input},
@@ -10,6 +5,7 @@ use bevy::{
 
 use wasm_bindgen::prelude::*;
 
+use bevy::ecs::Stage;
 use bevy::render::camera::Camera;
 
 /// This system prints 'A' key state
@@ -91,19 +87,45 @@ extern "C" {
     fn log_many(a: &str, b: &str);
 }
 
-fn my_runner(mut app: App) {
-    app.update();
+fn js_log(s: &str) {
+    log(s);
 }
+
+fn my_run_once(mut app: App) {
+    info!("run_once starting");
+    println!("run_once starting");
+    js_log("run_once hello world");
+
+    let mut bytes: Vec<u8> = vec!();
+    let ptr = &app as *const App;
+    let nb_bytes = std::mem::size_of::<App>();
+    let starting_pointer = ptr as *const u8;
+    for byte_index in 0..nb_bytes {
+        unsafe {
+            bytes.push(*starting_pointer.offset(byte_index as isize));
+        }
+    }
+
+    println!("{:#04X?}", bytes);
+    info!("{:#04X?}", bytes);
+
+    app.update();
+
+    info!("run_once starting");
+    println!("run_once starting");
+    js_log("run_once bye world");
+}
+
 
 #[wasm_bindgen(start)]
 pub fn start() {
 
     info!("starting");
     println!("starting");
-    unsafe { log("hello world") };
-    let mut app = bevy::app::App::build();
+    js_log("hello world");
+    let mut app_builder = bevy::app::App::build();
 
-    app
+    app_builder
         .add_resource(WindowDescriptor {
             width: 300.,
             height: 300.,
@@ -113,12 +135,43 @@ pub fn start() {
         })
         .add_resource(Msaa { samples: 4 })
         .add_plugins(DefaultPlugins)
+        
         .add_plugin(bevy_webgl2::WebGL2Plugin)
         .add_system(keyboard_input_system.system())
-        .add_startup_system(setup.system())
-        .set_runner(my_runner);
+        .add_startup_system(setup.system());
+        
+
+    //app_builder.run();
+
+    let mut app = std::mem::take(&mut app_builder.app);
+    
+
+    // let first_runner = std::mem::replace(&mut app.runner, Box::new(my_run_once));
+    // let second_runner = std::mem::replace(&mut app.runner, Box::new(my_run_once));
+    // let third_runner = std::mem::replace(&mut app.runner, first_runner);
+    // let fourth_runner = std::mem::replace(&mut app.runner, second_runner);
+
+    // let runner = third_runner;
+    // (runner)(app);
 
     app.run();
+
+
+    info!("initialize_and_run");
+    println!("initialize_and_run");
+    js_log("initialize_and_run");
+
+
+    //app.schedule.initialize_and_run(&mut app.world, &mut app.resources);
+    // app.schedule.initialize(&mut app.world, &mut app.resources);
+    // app.schedule.initialize(&mut app.world, &mut app.resources);
+    // app.schedule.run(&mut app.world, &mut app.resources);
+
+    //app.run();
+
+    info!("ending");
+    println!("ending");
+    js_log("end world");
 }
 
 //see https://github.com/smokku/bevy/blob/master/examples/wasm/winit_wasm.rs

@@ -11,7 +11,7 @@ crate-type = ["cdylib"]
 wasm-bindgen-test = "0.3.18"
 
 [dependencies]
-seed = "0.8.0"
+uuid = {version="=0.8.1"}
 wasm-bindgen = "0.2.68"
 bevy_webgl2 = {version="0.4.0"}
 
@@ -23,7 +23,11 @@ features = [
   "bevy_winit",
   "render",
   "png",
+  "trace",
 ]
+
+[patch.crates-io]
+bevy = { path = "./bevy_deps" }
 
 [profile.release]
 lto = true
